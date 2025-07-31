@@ -28,7 +28,7 @@ resource "aws_ecs_task_definition" "this" {
         logDriver = "awslogs"
         options = {
           awslogs-group         = var.log_group_names.nginx
-          awslogs-region        = data.aws_region.current.id
+          awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = "ecs"
         }
       }
@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "this" {
         logDriver = "awslogs"
         options = {
           awslogs-group         = var.log_group_names.web
-          awslogs-region        = data.aws_region.current.id
+          awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = "ecs"
         }
       }

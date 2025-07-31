@@ -9,7 +9,7 @@ data "aws_cloudwatch_log_group" "nginx" {
 data "aws_caller_identity" "self" {}
 
 locals {
-  arn_self = "${data.aws_region.current.id}:${data.aws_caller_identity.self.account_id}"
+  arn_self = "${data.aws_region.current.region}:${data.aws_caller_identity.self.account_id}"
 }
 
 resource "aws_iam_role_policy" "ecs" {

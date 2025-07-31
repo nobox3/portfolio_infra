@@ -38,7 +38,7 @@ data "aws_caller_identity" "self" {}
 data "aws_region" "current" {}
 
 locals {
-  arn_self = "${data.aws_region.current.id}:${data.aws_caller_identity.self.account_id}"
+  arn_self = "${data.aws_region.current.region}:${data.aws_caller_identity.self.account_id}"
 }
 
 resource "aws_iam_policy" "ssm" {
