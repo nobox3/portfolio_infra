@@ -1,18 +1,6 @@
 locals {
   ssm_parameter_path = "/${replace(var.app_id, "-", "/")}"
-  app_bucket_name    = replace("${var.organization}-${var.app_id}-app", "_", "-")
-}
-
-data "aws_ssm_parameter" "db_name" {
-  name = "${local.ssm_parameter_path}/DATABASE_NAME"
-}
-
-data "aws_ssm_parameter" "db_username" {
-  name = "${local.ssm_parameter_path}/DATABASE_USERNAME"
-}
-
-data "aws_ssm_parameter" "db_password" {
-  name = "${local.ssm_parameter_path}/DATABASE_PASSWORD"
+  bucket_name_prefix = replace("${var.organization}-${var.app_id}", "_", "-")
 }
 
 # ----------------------------------------
@@ -61,12 +49,24 @@ module "alb" {
   certificate_arn   = var.certificate_arn
   vpc_id            = module.network.vpc_id
   health_check_path = "/health"
-  log_bucket_name   = replace("${var.organization}-${var.app_id}-alb-log", "_", "-")
+  log_bucket_name   = "${local.bucket_name_prefix}-alb-log"
 }
 
 # ----------------------------------------
 # Database
 # ----------------------------------------
+data "aws_ssm_parameter" "db_name" {
+  name = "${local.ssm_parameter_path}/DATABASE_NAME"
+}
+
+data "aws_ssm_parameter" "db_username" {
+  name = "${local.ssm_parameter_path}/DATABASE_USERNAME"
+}
+
+data "aws_ssm_parameter" "db_password" {
+  name = "${local.ssm_parameter_path}/DATABASE_PASSWORD"
+}
+
 module "db" {
   source = "../../../../modules/db"
 
@@ -91,6 +91,45 @@ module "cache" {
 }
 
 # ----------------------------------------
+# Mail
+# ----------------------------------------
+data "aws_ssm_parameter" "domain_auth_domain_key" {
+  name = "${local.ssm_parameter_path}/sender_auth/domain_auth/DOMAIN_KEY"
+}
+
+data "aws_ssm_parameter" "domain_auth_prefix_main" {
+  name = "${local.ssm_parameter_path}/sender_auth/domain_auth/PREFIX_MAIN"
+}
+
+data "aws_ssm_parameter" "link_brand_primary" {
+  name = "${local.ssm_parameter_path}/sender_auth/link_brands/PRIMARY"
+}
+
+data "aws_ssm_parameter" "link_brand_secondary1" {
+  name = "${local.ssm_parameter_path}/sender_auth/link_brands/SECONDARY1"
+}
+
+module "mail" {
+  source = "../../../../modules/routing/mail"
+
+  zone_id              = var.host_zone_id
+  mail_service_host    = "sendgrid.net"
+  domain_key           = data.aws_ssm_parameter.domain_auth_domain_key.value
+  name_prefix_main     = data.aws_ssm_parameter.domain_auth_prefix_main.value
+  link_brand_primary   = data.aws_ssm_parameter.link_brand_primary.value
+  link_brand_secondary = data.aws_ssm_parameter.link_brand_secondary1.value
+}
+
+module "ses" {
+  source = "../../../../modules/ses"
+
+  app_id              = var.app_id
+  zone_id             = var.host_zone_id
+  recipients_for_host = [{ name = "support", domain_prefix = "" }]
+  mail_bucket_name    = "${local.bucket_name_prefix}-mail"
+}
+
+# ----------------------------------------
 # ECS
 # ----------------------------------------
 module "app_log" {
@@ -100,22 +139,9 @@ module "app_log" {
 }
 
 module "app_bucket" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "~> 5.2.0"
+  source = "../../../../modules/bucket/app"
 
-  bucket = local.app_bucket_name
-
-  server_side_encryption_configuration = {
-    rule = {
-      apply_server_side_encryption_by_default = {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
-
-  tags = {
-    Name = local.app_bucket_name
-  }
+  bucket_name = "${local.bucket_name_prefix}-app"
 }
 
 module "ecs" {
@@ -123,5 +149,5 @@ module "ecs" {
 
   app_id             = var.app_id
   ssm_parameter_path = local.ssm_parameter_path
-  app_bucket_arn     = module.app_bucket.s3_bucket_arn
+  app_bucket_arn     = module.app_bucket.arn
 }
