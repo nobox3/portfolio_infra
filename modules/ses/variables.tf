@@ -26,3 +26,8 @@ variable "mail_bucket_name" {
   type        = string
   description = "The name of the S3 bucket used for SES mail storage."
 }
+
+variable "mail_bucket_arn" {
+  type        = string
+  description = "The ARN of the S3 bucket used for SES mail storage."
+}

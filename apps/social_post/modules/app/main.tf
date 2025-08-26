@@ -1,6 +1,5 @@
 locals {
   ssm_parameter_path = "/${replace(var.app_id, "-", "/")}"
-  bucket_name_prefix = replace("${var.organization}-${var.app_id}", "_", "-")
 }
 
 # ----------------------------------------
@@ -46,10 +45,9 @@ module "alb" {
   ]
 
   subnets           = [for s in module.network.subnet.public : s.id]
-  certificate_arn   = var.certificate_arn
   vpc_id            = module.network.vpc_id
   health_check_path = "/health"
-  log_bucket_name   = "${local.bucket_name_prefix}-alb-log"
+  log_bucket_name   = module.alb_log_bucket.s3_bucket_id
 }
 
 # ----------------------------------------
@@ -126,28 +124,27 @@ module "ses" {
   app_id              = var.app_id
   zone_id             = var.host_zone_id
   recipients_for_host = [{ name = "support", domain_prefix = "" }]
-  mail_bucket_name    = "${local.bucket_name_prefix}-mail"
+  mail_bucket_name    = module.mail_bucket.s3_bucket_id
+  mail_bucket_arn     = module.mail_bucket.s3_bucket_arn
+}
+
+# ----------------------------------------
+# CDN
+# ----------------------------------------
+module "cdn" {
+  source = "../../../../modules/cdn"
+
+  app_id  = var.app_id
+  zone_id = var.host_zone_id
 }
 
 # ----------------------------------------
 # ECS
 # ----------------------------------------
-module "app_log" {
-  source = "../../../../modules/log/app"
-
-  app_id = var.app_id
-}
-
-module "app_bucket" {
-  source = "../../../../modules/bucket/app"
-
-  bucket_name = "${local.bucket_name_prefix}-app"
-}
-
 module "ecs" {
   source = "../../../../modules/ecs/cluster"
 
   app_id             = var.app_id
   ssm_parameter_path = local.ssm_parameter_path
-  app_bucket_arn     = module.app_bucket.arn
+  app_bucket_arn     = module.app_bucket.s3_bucket_arn
 }

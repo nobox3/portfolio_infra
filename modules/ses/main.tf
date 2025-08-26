@@ -102,7 +102,7 @@ data "aws_iam_policy_document" "ses_mail_bucket" {
   statement {
     sid       = "S3Access"
     actions   = ["s3:PutObject"]
-    resources = ["${module.mail_bucket.s3_bucket_arn}/*"]
+    resources = ["${var.mail_bucket_arn}/*"]
   }
 
   statement {
@@ -110,4 +110,38 @@ data "aws_iam_policy_document" "ses_mail_bucket" {
     actions   = ["sns:Publish"]
     resources = [aws_sns_topic.this.arn]
   }
+}
+
+# ----------------------------------------
+# Mail Bucket Policy
+# ----------------------------------------
+data "aws_iam_policy_document" "mail_bucket" {
+  statement {
+    sid     = "AllowSESPuts"
+    actions = ["s3:PutObject"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ses.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceAccount"
+      values   = [data.aws_caller_identity.self.account_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [local.rule_arn]
+    }
+
+    resources = ["${var.mail_bucket_arn}/*"]
+  }
+}
+
+resource "aws_s3_bucket_policy" "mail_bucket_policy" {
+  bucket = var.mail_bucket_name
+  policy = data.aws_iam_policy_document.mail_bucket.json
 }

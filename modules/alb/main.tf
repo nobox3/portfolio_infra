@@ -2,6 +2,10 @@ data "aws_route53_zone" "host" {
   zone_id = var.zone_id
 }
 
+data "aws_acm_certificate" "root" {
+  domain = data.aws_route53_zone.host.name
+}
+
 resource "aws_route53_record" "root_a" {
   count = var.enable_alb ? 1 : 0
 
@@ -25,7 +29,7 @@ resource "aws_lb" "this" {
   load_balancer_type = "application"
 
   access_logs {
-    bucket  = module.log_bucket.s3_bucket_id
+    bucket  = var.log_bucket_name
     enabled = true
     prefix  = "web"
   }
@@ -41,7 +45,7 @@ resource "aws_lb" "this" {
 resource "aws_lb_listener" "https" {
   count = var.enable_alb ? 1 : 0
 
-  certificate_arn   = var.certificate_arn
+  certificate_arn   = data.aws_acm_certificate.root.arn
   load_balancer_arn = aws_lb.this[0].arn
   port              = 443
   protocol          = "HTTPS"

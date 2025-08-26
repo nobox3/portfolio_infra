@@ -15,11 +15,6 @@ variable "host_zone_id" {
   description = "The Route53 zone ID for the host configuration."
 }
 
-variable "certificate_arn" {
-  type        = string
-  description = "The ARN of the ACM certificate for the application."
-}
-
 variable "enable_nat_gateway" {
   type    = bool
   default = true
