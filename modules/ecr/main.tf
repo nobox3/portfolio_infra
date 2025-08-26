@@ -26,8 +26,3 @@ resource "aws_ecr_lifecycle_policy" "this" {
     ]
   })
 }
-
-data "aws_ecr_image" "latest" {
-  repository_name = var.name
-  most_recent     = true
-}

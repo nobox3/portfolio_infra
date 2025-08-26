@@ -26,11 +26,10 @@ locals {
 module "app" {
   source = "../../../modules/app"
 
-  organization    = module.config.this.organization
-  workspace       = module.config.this.workspace
-  app_id          = local.app_id
-  host_zone_id    = data.tfe_outputs.host.values.route53_zone_id
-  certificate_arn = data.tfe_outputs.host.values.acm_certificate_root_arn
+  organization = module.config.this.organization
+  workspace    = module.config.this.workspace
+  app_id       = local.app_id
+  host_zone_id = data.tfe_outputs.host.values.route53_zone_id
 
   enable_alb         = false
   enable_nat_gateway = false

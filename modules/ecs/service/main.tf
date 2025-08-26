@@ -1,4 +1,20 @@
-data "aws_region" "current" {}
+# ----------------------------------------
+# CloudWatch Log Groups
+# ----------------------------------------
+locals {
+  log_group_name_prefix = "/ecs/${var.app_id}"
+  log_retention_in_days = 90
+}
+
+resource "aws_cloudwatch_log_group" "nginx" {
+  name              = "${local.log_group_name_prefix}/nginx"
+  retention_in_days = local.log_retention_in_days
+}
+
+resource "aws_cloudwatch_log_group" "web" {
+  name              = "${local.log_group_name_prefix}/web"
+  retention_in_days = local.log_retention_in_days
+}
 
 # ----------------------------------------
 # Task definition
@@ -8,8 +24,8 @@ resource "aws_ecs_task_definition" "this" {
 
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  execution_role_arn       = var.task_execution_role_arn
-  task_role_arn            = var.task_role_arn
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = data.aws_iam_role.ecs_task.arn
 
   memory = 512
   cpu    = 256
@@ -17,7 +33,7 @@ resource "aws_ecs_task_definition" "this" {
   container_definitions = jsonencode([
     {
       name         = "nginx"
-      image        = var.images.nginx
+      image        = data.aws_ecr_image.nginx.image_uri
       portMappings = [{ containerPort = 80, protocol = "tcp" }]
       environment  = []
       secrets      = []
@@ -27,7 +43,7 @@ resource "aws_ecs_task_definition" "this" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = var.log_group_names.nginx
+          awslogs-group         = aws_cloudwatch_log_group.nginx.name
           awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = "ecs"
         }
@@ -35,7 +51,7 @@ resource "aws_ecs_task_definition" "this" {
     },
     {
       name         = "web"
-      image        = var.images.web
+      image        = data.aws_ecr_image.web.image_uri
       portMappings = []
       environment  = []
       secrets      = []
@@ -44,7 +60,7 @@ resource "aws_ecs_task_definition" "this" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = var.log_group_names.web
+          awslogs-group         = aws_cloudwatch_log_group.web.name
           awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = "ecs"
         }
@@ -66,7 +82,7 @@ resource "aws_ecs_task_definition" "this" {
 # ----------------------------------------
 resource "aws_ecs_service" "this" {
   name            = var.app_id
-  cluster         = var.cluster_arn
+  cluster         = data.aws_ecs_cluster.app.arn
   task_definition = aws_ecs_task_definition.this.arn
 
   desired_count                      = var.desired_count
@@ -91,8 +107,8 @@ resource "aws_ecs_service" "this" {
 
   network_configuration {
     assign_public_ip = false
-    security_groups  = var.security_groups
-    subnets          = var.subnets
+    security_groups  = data.aws_security_groups.app.ids
+    subnets          = data.aws_subnets.app.ids
   }
 
   tags = {

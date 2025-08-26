@@ -1,13 +1,3 @@
-data "aws_cloudwatch_log_group" "web" {
-  name = var.log_group_names.web
-}
-
-data "aws_cloudwatch_log_group" "nginx" {
-  name = var.log_group_names.nginx
-}
-
-data "aws_caller_identity" "self" {}
-
 locals {
   arn_self = "${data.aws_region.current.region}:${data.aws_caller_identity.self.account_id}"
 }
@@ -35,7 +25,7 @@ data "aws_iam_policy_document" "ecs" {
   statement {
     sid       = "PassRolesInTaskDefinition"
     actions   = ["iam:PassRole"]
-    resources = [var.task_execution_role_arn, var.task_role_arn]
+    resources = [data.aws_iam_role.ecs_task_execution.arn, data.aws_iam_role.ecs_task.arn]
   }
 
   statement {
@@ -51,7 +41,7 @@ data "aws_iam_policy_document" "ecs" {
     condition {
       test     = "ArnEquals"
       variable = "ecs:cluster"
-      values   = [var.cluster_arn]
+      values   = [data.aws_ecs_cluster.app.arn]
     }
 
     resources = [
@@ -63,6 +53,6 @@ data "aws_iam_policy_document" "ecs" {
   statement {
     sid       = "GetLogEvents"
     actions   = ["logs:GetLogEvents"]
-    resources = [data.aws_cloudwatch_log_group.web.arn, data.aws_cloudwatch_log_group.nginx.arn]
+    resources = [aws_cloudwatch_log_group.web.arn, aws_cloudwatch_log_group.nginx.arn]
   }
 }
