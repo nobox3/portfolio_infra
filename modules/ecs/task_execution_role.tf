@@ -33,14 +33,6 @@ data "aws_iam_policy" "ecs_task_execution" {
 # ----------------------------------------
 # SSM
 # ----------------------------------------
-data "aws_caller_identity" "self" {}
-
-data "aws_region" "current" {}
-
-locals {
-  arn_self = "${data.aws_region.current.region}:${data.aws_caller_identity.self.account_id}"
-}
-
 resource "aws_iam_policy" "ssm" {
   name   = "${var.app_id}-ssm"
   policy = data.aws_iam_policy_document.ssm.json

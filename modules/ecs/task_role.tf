@@ -30,7 +30,7 @@ resource "aws_iam_role_policy" "ecs_task_app_bucket" {
 data "aws_iam_policy_document" "ecs_task_app_bucket" {
   statement {
     actions   = ["s3:ListBucket", "s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
-    resources = [var.app_bucket_arn, "${var.app_bucket_arn}/*"]
+    resources = [data.aws_s3_bucket.app.arn, "${data.aws_s3_bucket.app.arn}/*"]
   }
 }
 

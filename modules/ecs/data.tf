@@ -3,25 +3,17 @@ data "aws_caller_identity" "self" {}
 data "aws_region" "current" {}
 
 data "aws_ecr_image" "nginx" {
-  repository_name = "${var.app_id}-nginx"
+  repository_name = "${var.repository_name_prefix}-nginx"
   most_recent     = true
 }
 
 data "aws_ecr_image" "web" {
-  repository_name = "${var.app_id}-web"
+  repository_name = "${var.repository_name_prefix}-web"
   most_recent     = true
 }
 
-data "aws_ecs_cluster" "app" {
-  cluster_name = var.app_id
-}
-
-data "aws_iam_role" "ecs_task" {
-  name = "${var.app_id}-ecs-task"
-}
-
-data "aws_iam_role" "ecs_task_execution" {
-  name = "${var.app_id}-ecs-task-execution"
+data "aws_route53_zone" "host" {
+  zone_id = var.zone_id
 }
 
 data "aws_vpc" "app" {
@@ -55,4 +47,20 @@ data "aws_subnets" "app" {
     name   = "tag:Name"
     values = ["${data.aws_vpc.app.tags.Name}-private-*"]
   }
+}
+
+data "aws_db_instance" "app" {
+  db_instance_identifier = replace(var.app_id, "_", "-")
+}
+
+data "aws_elasticache_replication_group" "app" {
+  replication_group_id = replace(var.app_id, "_", "-")
+}
+
+data "aws_s3_bucket" "app" {
+  bucket = var.app_bucket_id
+}
+
+data "aws_cloudfront_distribution" "app" {
+  id = var.cdn_id
 }

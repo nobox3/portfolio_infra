@@ -15,6 +15,15 @@ variable "host_zone_id" {
   description = "The Route53 zone ID for the host configuration."
 }
 
+variable "deployer_role_id" {
+  type        = string
+  description = "The ID of the IAM role used by the deployer."
+}
+
+variable "repository_name_prefix" {
+  type = string
+}
+
 variable "enable_nat_gateway" {
   type    = bool
   default = true

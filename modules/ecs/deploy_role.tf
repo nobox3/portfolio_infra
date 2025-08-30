@@ -2,13 +2,13 @@ locals {
   arn_self = "${data.aws_region.current.region}:${data.aws_caller_identity.self.account_id}"
 }
 
-resource "aws_iam_role_policy" "ecs" {
-  name   = "ecs"
+resource "aws_iam_role_policy" "ecs_deploy" {
+  name   = "ecs-deploy"
   role   = var.deployer_role_id
-  policy = data.aws_iam_policy_document.ecs.json
+  policy = data.aws_iam_policy_document.ecs_deploy.json
 }
 
-data "aws_iam_policy_document" "ecs" {
+data "aws_iam_policy_document" "ecs_deploy" {
   statement {
     sid = "RegisterTaskDefinition"
 
@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "ecs" {
   statement {
     sid       = "PassRolesInTaskDefinition"
     actions   = ["iam:PassRole"]
-    resources = [data.aws_iam_role.ecs_task_execution.arn, data.aws_iam_role.ecs_task.arn]
+    resources = [aws_iam_role.ecs_task_execution.arn, aws_iam_role.ecs_task.arn]
   }
 
   statement {
@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "ecs" {
     condition {
       test     = "ArnEquals"
       variable = "ecs:cluster"
-      values   = [data.aws_ecs_cluster.app.arn]
+      values   = [aws_ecs_cluster.this.arn]
     }
 
     resources = [

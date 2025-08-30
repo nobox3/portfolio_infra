@@ -125,9 +125,16 @@ module "cdn" {
 # ECS
 # ----------------------------------------
 module "ecs" {
-  source = "../../../../modules/ecs/cluster"
+  source = "../../../../modules/ecs"
 
-  app_id             = var.app_id
-  ssm_parameter_path = local.ssm_parameter_path
-  app_bucket_arn     = module.app_bucket.s3_bucket_arn
+  desired_count          = 0
+  app_id                 = var.app_id
+  zone_id                = var.host_zone_id
+  deployer_role_id       = var.deployer_role_id
+  repository_name_prefix = var.repository_name_prefix
+  ssm_parameter_path     = local.ssm_parameter_path
+  vpc_id                 = module.network.vpc_id
+  target_group_arn       = module.alb.lb_target_group_arn
+  app_bucket_id          = module.app_bucket.s3_bucket_id
+  cdn_id                 = module.cdn.id
 }
