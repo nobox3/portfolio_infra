@@ -3,23 +3,6 @@ locals {
 }
 
 # ----------------------------------------
-# ECR
-# ----------------------------------------
-module "nginx" {
-  source = "../../../../modules/ecr"
-
-  name          = "${var.app_id}-nginx"
-  holding_count = 1
-}
-
-module "web" {
-  source = "../../../../modules/ecr"
-
-  name          = "${var.app_id}-web"
-  holding_count = 1
-}
-
-# ----------------------------------------
 # Network
 # ----------------------------------------
 module "network" {
