@@ -10,8 +10,7 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "this" {
-  cluster_name = aws_ecs_cluster.this.name
-
+  cluster_name       = aws_ecs_cluster.this.name
   capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 }
 
@@ -101,7 +100,6 @@ resource "aws_ecs_task_definition" "this" {
           value = data.aws_vpc.app.cidr_block
         }
       ]
-      secrets     = []
       dependsOn   = [{ containerName = "web", condition = "START" }]
       mountPoints = [{ containerPath = "/var/run/sockets", sourceVolume = "sockets" }]
 

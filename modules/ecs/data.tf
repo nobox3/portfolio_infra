@@ -3,12 +3,12 @@ data "aws_caller_identity" "self" {}
 data "aws_region" "current" {}
 
 data "aws_ecr_image" "nginx" {
-  repository_name = "${var.repository_name_prefix}-nginx"
+  repository_name = "${var.app_id}-nginx"
   most_recent     = true
 }
 
 data "aws_ecr_image" "web" {
-  repository_name = "${var.repository_name_prefix}-web"
+  repository_name = "${var.app_id}-web"
   most_recent     = true
 }
 

@@ -12,11 +12,6 @@ variable "deployer_role_id" {
   description = "The ID of the IAM role used by the deployer."
 }
 
-variable "repository_name_prefix" {
-  type        = string
-  description = "The prefix for the ECR repository names."
-}
-
 variable "ssm_parameter_path" {
   type        = string
   description = "The SSM parameter path to fetch environment variables from."
