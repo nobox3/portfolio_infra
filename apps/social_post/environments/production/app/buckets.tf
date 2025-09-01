@@ -1,5 +1,5 @@
 locals {
-  bucket_name_prefix = replace("${var.organization}-${var.app_id}", "_", "-")
+  bucket_name_prefix = replace("${module.config.this.organization}-${local.app_id}", "_", "-")
 
   server_side_encryption_configuration = {
     rule = {

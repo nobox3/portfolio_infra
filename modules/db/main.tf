@@ -4,6 +4,15 @@ data "aws_kms_alias" "rds" {
   name = "alias/aws/rds"
 }
 
+resource "aws_db_subnet_group" "this" {
+  name       = "${var.app_id}-db-subnet-group"
+  subnet_ids = var.subnet_ids
+
+  tags = {
+    Name = "${var.app_id}-db-subnet-group"
+  }
+}
+
 module "db" {
   source  = "terraform-aws-modules/rds/aws"
   version = "~> 6.12.0"
@@ -28,7 +37,7 @@ module "db" {
   multi_az = false
 
   # Connectivity
-  db_subnet_group_name   = var.db_subnet_group_name
+  db_subnet_group_name   = aws_db_subnet_group.this.id
   publicly_accessible    = false
   vpc_security_group_ids = var.vpc_security_group_ids
   availability_zone      = "${data.aws_region.current.region}a"

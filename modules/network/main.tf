@@ -129,22 +129,3 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[each.key].id
   subnet_id      = aws_subnet.private[each.key].id
 }
-
-# ----------------------------------------
-# Subnet Associations
-# ----------------------------------------
-resource "aws_db_subnet_group" "this" {
-  name = aws_vpc.this.tags.Name
-
-  subnet_ids = [for s in aws_subnet.private : s.id]
-
-  tags = {
-    Name = aws_vpc.this.tags.Name
-  }
-}
-
-resource "aws_elasticache_subnet_group" "this" {
-  name = replace(aws_vpc.this.tags.Name, "_", "-")
-
-  subnet_ids = [for s in aws_subnet.private : s.id]
-}

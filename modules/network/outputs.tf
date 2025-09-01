@@ -9,14 +9,6 @@ output "subnet" {
   }
 }
 
-output "db_subnet_group_id" {
-  value = aws_db_subnet_group.this.id
-}
-
-output "elasticache_subnet_group_id" {
-  value = aws_elasticache_subnet_group.this.id
-}
-
 output "security_group_ids" {
   value = {
     web   = aws_security_group.web.id

@@ -1,3 +1,8 @@
+resource "aws_elasticache_subnet_group" "this" {
+  name       = "${var.app_id}-cache-subnet-group"
+  subnet_ids = var.subnet_ids
+}
+
 module "cache" {
   source  = "terraform-aws-modules/elasticache/aws"
   version = "~> 1.6.0"
@@ -13,7 +18,7 @@ module "cache" {
 
   # Subnet Group
   create_subnet_group = false
-  subnet_group_name   = var.subnet_group_name
+  subnet_group_name   = aws_elasticache_subnet_group.this.id
 
   # Security
   create_security_group      = false
